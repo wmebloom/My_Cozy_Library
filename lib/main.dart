@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart'; // Libreria de estilos
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/add_book_screen.dart';
+import 'dart:convert'; // Convertir lista a JSON
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(const MaterialApp(home: PantallaInicio()));
 
@@ -16,7 +18,7 @@ class _PantallaInicioState extends State<PantallaInicio> {
   final TextEditingController _controladorBusqueda = TextEditingController();
 
   // La lista completa de libros
-  final List<Map<String, String>> _todosLosLibros = [
+  List<Map<String, String>> _todosLosLibros = [
     {
       'titulo': 'Red Rising',
       'autor': 'Pierce Brown',
@@ -50,6 +52,7 @@ class _PantallaInicioState extends State<PantallaInicio> {
   @override
   void initState() {
     super.initState();
+    cargarLibros();
     _librosFiltrados = _todosLosLibros;
   }
 
@@ -76,9 +79,8 @@ class _PantallaInicioState extends State<PantallaInicio> {
     });
 
     List<Widget> tarjetas = _librosFiltrados.map((libro) {
-
       print("Pintando libro: ${libro['titulo']} - ${libro['autor']}");
-      
+
       return crearTarjetaLibro(
         libro['titulo'] ?? 'Sin título',
         libro['autor'] ?? 'Sin autor',
@@ -234,7 +236,8 @@ class _PantallaInicioState extends State<PantallaInicio> {
                   'titulo': resultado['titulo'] ?? 'Sin título',
                   'autor': resultado['autor'] ?? 'Anónimo',
                   'estado': resultado['estado'] ?? 'Pendiente',
-                  'portada': (resultado['url'] == null || resultado['url']!.isEmpty)
+                  'portada':
+                      (resultado['url'] == null || resultado['url']!.isEmpty)
                       ? 'https://via.placeholder.com/50x70'
                       : resultado['url']!,
                 };
@@ -243,6 +246,8 @@ class _PantallaInicioState extends State<PantallaInicio> {
                 // Actualiamos tambien los filtrados
                 _librosFiltrados = List.from(_todosLosLibros);
               });
+
+              guardarLibros();
             }
           }
         },
@@ -265,6 +270,38 @@ class _PantallaInicioState extends State<PantallaInicio> {
       ),
     );
   }
+
+  // Función para guardar la lista entera al añadir algo
+  Future<void> guardarLibros() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final String datosCodificados = json.encode(_todosLosLibros);
+    await prefs.setString('mis_libros_biblioteca', datosCodificados);
+    print("Libros guardados en el dispositivo!");
+  }
+
+  // Función para leer el String de guardarLibros()
+  Future<void> cargarLibros() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? datosObtenidos = prefs.getString('mis_libros_biblioteca');
+
+    if (datosObtenidos != null) {
+      setState(() {
+        List<dynamic> listaDecodificada = json.decode(datosObtenidos);
+
+        _todosLosLibros = listaDecodificada.map((item) {
+          return Map<String, String>.from(item);
+        }).toList();
+
+        _librosFiltrados = List.from(_todosLosLibros);
+      });
+
+      print("Libros cargados correctamente");
+    }
+  }
+
+
+
 }
 
 // Función crear tarjetas
@@ -394,3 +431,6 @@ Widget crearTarjetaLibro(
   );
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
