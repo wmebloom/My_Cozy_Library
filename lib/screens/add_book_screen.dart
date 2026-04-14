@@ -92,7 +92,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
               TextFormField(
                 controller: _urlController,
                 onChanged: (val) => setState(() => _tempUrl = val),
-                decoration: _inputStyle('Pega el enlace de la imagen...'),
+                decoration: _inputStyle('Pega el enlace de la imagen...', _urlController),
               ),
 
               const SizedBox(height: 20),
@@ -153,7 +153,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
     );
   }
 
-  // --- WIDGETS DE APOYO PARA NO REPETIR CÓDIGO ---
+  //  WIDGETS DE APOYO PARA NO REPETIR CÓDIGO 
 
   Widget _buildLabel(String text) {
     return Padding(
@@ -171,14 +171,38 @@ class _AddBookScreenState extends State<AddBookScreen> {
   Widget _buildTextField(TextEditingController controller, String hint) {
     return TextFormField(
       controller: controller,
-      decoration: _inputStyle(hint),
+      onChanged: (value) => setState(() {}),
+      // Estilo texto escribe user
+      style: GoogleFonts.inter(
+        color:const Color(0xFF2D241E),
+        fontSize: 13,
+      ),
+      decoration: _inputStyle(hint, controller),
       validator: (val) => val == null || val.isEmpty ? 'Campo obligatorio' : null,
     );
   }
 
-  InputDecoration _inputStyle(String hint) {
+  InputDecoration _inputStyle(String hint, TextEditingController controller) {
     return InputDecoration(
       hintText: hint,
+      // Estilo texto guia
+      hintStyle: GoogleFonts.inter(
+        color: const Color(0xFF2D241E).withOpacity(0.4),
+        fontSize: 13,
+      ),
+
+      // Icono de borrar
+      suffixIcon: controller.text.isNotEmpty ? IconButton(
+        icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+        onPressed: () {
+          controller.clear();
+
+          setState((){
+            if(controller == _urlController) _tempUrl = '';
+          });
+        },
+      ) : null,
+
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
