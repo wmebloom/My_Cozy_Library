@@ -78,15 +78,23 @@ class _PantallaInicioState extends State<PantallaInicio> {
       }
     });
 
-    List<Widget> tarjetas = _librosFiltrados.map((libro) {
+    List<Widget> tarjetas = _librosFiltrados.asMap().entries.map((entry) {
+      int index = entry.key;
+      Map<String, String> libro = entry.value;
+
       print("Pintando libro: ${libro['titulo']} - ${libro['autor']}");
 
-      return crearTarjetaLibro(
-        libro['titulo'] ?? 'Sin título',
-        libro['autor'] ?? 'Sin autor',
-        libro['estado'] ?? 'Pendiente',
-        libro['portada'] ?? 'https://via.placeholder.com/50x70',
-        context,
+      return GestureDetector(
+        onLongPress: () {
+          _confirmarBorrado(context, index);
+        },
+        child: crearTarjetaLibro(
+          libro['titulo'] ?? 'Sin título',
+          libro['autor'] ?? 'Sin autor',
+          libro['estado'] ?? 'Pendiente',
+          libro['portada'] ?? 'https://via.placeholder.com/50x70',
+          context,
+        ),
       );
     }).toList();
 
@@ -300,8 +308,119 @@ class _PantallaInicioState extends State<PantallaInicio> {
     }
   }
 
+  // Función para la ventana de confirmación de borrado
+  void _confirmarBorrado(BuildContext context, int index) {
+    final String tituloLibro =
+        _librosFiltrados[index]['titulo'] ?? 'Sin titulo';
+    final String autorLibro =
+        _librosFiltrados[index]['autor'] ?? 'Autor desconocido';
 
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFECE3D4),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
 
+          // Título centrado
+          title: Text(
+            '¿Eliminar libro?',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.playfairDisplay(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: const Color(0xFF2D241E),
+            ),
+          ),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '¿Estás seguro de que quieres borrar',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(fontSize: 15),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '"$tituloLibro"',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+
+              Text(
+                'de $autorLibro?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(fontSize: 15),
+              ),
+            ],
+          ),
+
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancelar',
+                style: GoogleFonts.inter(
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD32F2F),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+
+              onPressed: () {
+                _ejecutarBorrado(index);
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Eliminar',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Función para ejecutar el borrado
+  void _ejecutarBorrado(int index) {
+    setState(() {
+      // Libro a borrar
+      final libroABorrar = _librosFiltrados[index];
+
+      // Lo borramos de la lista principal
+      _todosLosLibros.removeWhere(
+        (libro) =>
+            libro['titulo'] == libroABorrar['titulo'] &&
+            libro['autor'] == libroABorrar['autor'],
+      );
+
+      // Lo borramos de la lista filtrada
+      _librosFiltrados.removeAt(index);
+    });
+
+    guardarLibros();
+  }
 }
 
 // Función crear tarjetas
@@ -430,7 +549,5 @@ Widget crearTarjetaLibro(
     ),
   );
 }
+
 //---------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
