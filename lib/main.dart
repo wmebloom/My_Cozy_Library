@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/add_book_screen.dart';
 import 'dart:convert'; // Convertir lista a JSON
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/book_details_screen.dart';
 
 void main() => runApp(const MaterialApp(home: PantallaInicio()));
 
@@ -88,6 +89,31 @@ class _PantallaInicioState extends State<PantallaInicio> {
         onLongPress: () {
           _confirmarBorrado(context, index);
         },
+        onTap: () async {
+          // 1. Navegamos y esperamos el resultado
+          final resultadoEditado = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookDetailsScreen(libro: libro),
+            ),
+          );
+
+          // 2. Si el usuario guardó cambios, actualizamos
+          if (resultadoEditado != null) {
+            setState(() {
+              // Buscamos la posición real del libro y lo reemplazamos
+              int indiceReal = _todosLosLibros.indexOf(libro);
+              if (indiceReal != -1) {
+                _todosLosLibros[indiceReal] = Map<String, String>.from(resultadoEditado);
+                _librosFiltrados = List.from(_todosLosLibros);
+              }
+            });
+            
+            // 3. Guardamos en el dispositivo
+            guardarLibros();
+          }
+        },
+        //----------------------------
         child: crearTarjetaLibro(
           libro['titulo'] ?? 'Sin título',
           libro['autor'] ?? 'Sin autor',
