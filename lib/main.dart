@@ -94,12 +94,22 @@ class _PantallaInicioState extends State<PantallaInicio> {
           final resultadoEditado = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BookDetailsScreen(libro: libro),
+              builder: (context) => BookDetailsScreen(libro: libro, onSave: (libroActualizado){
+                setState((){
+                  int indiceReal = _todosLosLibros.indexOf(libro);
+                  if(indiceReal != -1) {
+                    _todosLosLibros[indiceReal] = Map<String, String>.from(libroActualizado);
+                    _librosFiltrados = List.from(_todosLosLibros);
+                  }
+                });
+
+                guardarLibros();
+              }),
             ),
           );
 
           // 2. Si el usuario guardó cambios, actualizamos
-          if (resultadoEditado != null) {
+          if (resultadoEditado != null && resultadoEditado is Map<String, String>) {
             setState(() {
               // Buscamos la posición real del libro y lo reemplazamos
               int indiceReal = _todosLosLibros.indexOf(libro);
