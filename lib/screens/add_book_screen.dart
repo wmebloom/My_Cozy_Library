@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/google_books_service.dart';
 
 class AddBookScreen extends StatefulWidget {
   const AddBookScreen({super.key});
@@ -13,6 +14,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
   final _urlController = TextEditingController();
+  final _yearController = TextEditingController();
+  final _googleService = GoogleBooksService();
+  List<Map<String, String>> _sugerencias = [];
+  bool _buscando = false;
+
+  Map<String, String>? _libroSeleccionado;
+
   String _selectedStatus = 'Pendiente';
 
   // Esto es para que la imagen se actualice mientras escribes la URL
@@ -66,10 +74,17 @@ class _AddBookScreenState extends State<AddBookScreen> {
                         ? Image.network(
                             _tempUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stack) => 
-                              const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                            errorBuilder: (context, error, stack) => const Icon(
+                              Icons.broken_image,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
                           )
-                        : const Icon(Icons.book, size: 50, color: Color(0xFFD4A373)),
+                        : const Icon(
+                            Icons.book,
+                            size: 50,
+                            color: Color(0xFFD4A373),
+                          ),
                   ),
                 ),
               ),
@@ -77,8 +92,92 @@ class _AddBookScreenState extends State<AddBookScreen> {
 
               // Campo Título
               _buildLabel('Título del libro'),
-              _buildTextField(_titleController, 'Ej: El nombre del viento'),
-              
+              TextFormField(
+                controller: _titleController,
+                onChanged: (value) async {
+                  if (value.length > 2) {
+                    setState(() => _buscando = true);
+                    final resultados = await _googleService.buscar(value);
+                    setState(() {
+                      _sugerencias = resultados;
+                      _buscando = false;
+                    });
+                  } else {
+                    setState(() => _sugerencias = []);
+                  }
+                },
+
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF2D241E),
+                  fontSize: 13,
+                ),
+                decoration: _inputStyle(
+                  'Ej: El nombre del viento',
+                  _titleController,
+                  _buscando,
+                ),
+              ),
+              // Lista de sugerencias
+              if (_sugerencias.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 5),
+                    ],
+                  ),
+                  child: Column(
+                    // Usamos .map para convertir cada libro en un ListTile
+                    children: _sugerencias.map((libro) {
+                      // Extraemos los datos con valores por defecto por si Google falla
+                      final String titulo = libro['titulo'] ?? 'Sin título';
+                      final String autor =
+                          libro['autor'] ?? 'Autor desconocido';
+                      final String portada = libro['portada'] ?? '';
+
+                      return ListTile(
+                        leading: portada.isNotEmpty
+                            ? Image.network(
+                                portada,
+                                width: 40,
+                                // Si la URL de la imagen falla al cargar, ponemos un icono
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image, size: 30),
+                              )
+                            : const Icon(Icons.book),
+                        title: Text(
+                          titulo,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          autor,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _titleController.text = titulo;
+                            _authorController.text = autor;
+                            _urlController.text = libro['portada'] ?? '';
+                            _tempUrl = libro['portada'] ?? '';
+                            _yearController.text = libro['lanzamiento'] ?? '';
+
+                            // Guardamos el libro actual para los datos extra (páginas, fecha)
+                            _libroSeleccionado = Map<String, String>.from(libro);
+
+                            // Vaciamos la lista para que desaparezca el desplegable
+                            _sugerencias = [];
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+
               const SizedBox(height: 20),
 
               // Campo Autor
@@ -87,12 +186,19 @@ class _AddBookScreenState extends State<AddBookScreen> {
 
               const SizedBox(height: 20),
 
+              _buildLabel('Año de publicación'),
+              _buildTextField(_yearController, 'Ej: 2012'),
+              const SizedBox(height: 20),
+
               // Campo URL con listener para la imagen
               _buildLabel('URL de la portada'),
               TextFormField(
                 controller: _urlController,
                 onChanged: (val) => setState(() => _tempUrl = val),
-                decoration: _inputStyle('Pega el enlace de la imagen...', _urlController),
+                decoration: _inputStyle(
+                  'Pega el enlace de la imagen...',
+                  _urlController,
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -109,7 +215,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
                   child: DropdownButton<String>(
                     value: _selectedStatus,
                     isExpanded: true,
-                    items: ['Pendiente', 'En curso', 'Finalizado'].map((String value) {
+                    items: ['Pendiente', 'En curso', 'Finalizado'].map((
+                      String value,
+                    ) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(value),
@@ -153,7 +261,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
     );
   }
 
-  //  WIDGETS DE APOYO PARA NO REPETIR CÓDIGO 
+  //  WIDGETS DE APOYO PARA NO REPETIR CÓDIGO
 
   Widget _buildLabel(String text) {
     return Padding(
@@ -173,35 +281,56 @@ class _AddBookScreenState extends State<AddBookScreen> {
       controller: controller,
       onChanged: (value) => setState(() {}),
       // Estilo texto escribe user
-      style: GoogleFonts.inter(
-        color:const Color(0xFF2D241E),
-        fontSize: 13,
-      ),
+      style: GoogleFonts.inter(color: const Color(0xFF2D241E), fontSize: 13),
       decoration: _inputStyle(hint, controller),
-      validator: (val) => val == null || val.isEmpty ? 'Campo obligatorio' : null,
+      validator: (val) =>
+          val == null || val.isEmpty ? 'Campo obligatorio' : null,
     );
   }
 
-  InputDecoration _inputStyle(String hint, TextEditingController controller) {
+  InputDecoration _inputStyle(
+    String hint,
+    TextEditingController controller, [
+    bool buscando = false,
+  ]) {
     return InputDecoration(
       hintText: hint,
-      // Estilo texto guia
       hintStyle: GoogleFonts.inter(
         color: const Color(0xFF2D241E).withOpacity(0.4),
         fontSize: 13,
       ),
 
-      // Icono de borrar
-      suffixIcon: controller.text.isNotEmpty ? IconButton(
-        icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
-        onPressed: () {
-          controller.clear();
-
-          setState((){
-            if(controller == _urlController) _tempUrl = '';
-          });
-        },
-      ) : null,
+      // UN SOLO suffixIcon con toda la lógica combinada
+      suffixIcon: buscando
+          ? const Padding(
+              padding: EdgeInsets.all(12.0),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFD4A373),
+                ),
+              ),
+            )
+          : (controller.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.cancel,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      controller.clear();
+                      setState(() {
+                        // Limpiamos la previsualización si es el controlador de la URL
+                        if (controller == _urlController) _tempUrl = '';
+                        // Limpiamos sugerencias si borramos el título
+                        if (controller == _titleController) _sugerencias = [];
+                      });
+                    },
+                  )
+                : null),
 
       filled: true,
       fillColor: Colors.white,
@@ -218,8 +347,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
       Navigator.pop(context, {
         'titulo': _titleController.text,
         'autor': _authorController.text,
-        'url': _urlController.text,
+        'portada': _urlController.text,
         'estado': _selectedStatus,
+        'lanzamiento': _yearController.text,
+        'paginas': _libroSeleccionado?['paginas'] ?? '0',
+        'rating': _libroSeleccionado?['rating'] ?? '0.0',
+        'sinopsis': _libroSeleccionado?['sinopsis'] ?? 'Sin sinopsis.',
+        'genero' : _libroSeleccionado?['genero'] ?? 'General',
       });
     }
   }

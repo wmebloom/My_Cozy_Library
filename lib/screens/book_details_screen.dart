@@ -5,7 +5,11 @@ class BookDetailsScreen extends StatefulWidget {
   final Map<String, String> libro;
   final Function(Map<String, String>) onSave;
 
-  const BookDetailsScreen({super.key, required this.libro, required this.onSave});
+  const BookDetailsScreen({
+    super.key,
+    required this.libro,
+    required this.onSave,
+  });
 
   @override
   State<BookDetailsScreen> createState() => _BookDetailsScreenState();
@@ -15,6 +19,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   late TextEditingController _tituloController;
   late TextEditingController _autorController;
   late String _estadoSeleccionado;
+  late TextEditingController _yearController;
   TextEditingController _notasController = TextEditingController();
   bool _editando = false;
 
@@ -25,32 +30,41 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     _autorController = TextEditingController(text: widget.libro['autor']);
     _estadoSeleccionado = widget.libro['estado'] ?? 'Pendiente';
     _notasController = TextEditingController(text: widget.libro['notas'] ?? '');
+    _yearController = TextEditingController(
+      text: widget.libro['lanzamiento'] ?? '----',
+    );
   }
 
   @override
   void dispose() {
+    _tituloController.dispose();
+    _autorController.dispose();
+    _yearController.dispose();
     _notasController.dispose();
     super.dispose();
   }
 
   void _confirmarCambios({bool cerrarPantalla = true}) {
-       
-      widget.libro['titulo'] = _tituloController.text;
-      widget.libro['autor'] = _autorController.text;
-      widget.libro['estado'] = _estadoSeleccionado;
-      widget.libro['notas'] =_notasController.text;
+    widget.libro['titulo'] = _tituloController.text;
+    widget.libro['autor'] = _autorController.text;
+    widget.libro['estado'] = _estadoSeleccionado;
+    widget.libro['lanzamiento'] = _yearController.text;
+    widget.libro['notas'] = _notasController.text;
 
-      if(cerrarPantalla){
-        Navigator.pop(context, widget.libro);
-      } else {
-        setState((){
-          _editando = false;
-        });
+    if (cerrarPantalla) {
+      Navigator.pop(context, widget.libro);
+    } else {
+      setState(() {
+        _editando = false;
+      });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Nota guardada"), duration: Duration(seconds: 1)),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Nota guardada"),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   @override
@@ -67,29 +81,29 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFECE3D4),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Color(0xFF2D241E)),
-          
-          // Flecha de atrás: Solo cierra la pantalla, no guarda nada
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context), 
-          ),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2D241E)),
 
-          actions: [
-            IconButton(
-              // Cambia el icono según si estamos editando o no
-              icon: Icon(_editando ? Icons.close_rounded : Icons.edit_rounded),
-              onPressed: () {
-                setState(() {
-                  _editando = !_editando; // Activa/Desactiva el modo edición
-                });
-              },
-            )
-          ],
+        // Flecha de atrás: Solo cierra la pantalla, no guarda nada
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
+
+        actions: [
+          IconButton(
+            // Cambia el icono según si estamos editando o no
+            icon: Icon(_editando ? Icons.close_rounded : Icons.edit_rounded),
+            onPressed: () {
+              setState(() {
+                _editando = !_editando; // Activa/Desactiva el modo edición
+              });
+            },
+          ),
+        ],
+      ),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -105,11 +119,20 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                   width: 120,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 5))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.network(widget.libro['portada'] ?? '', fit: BoxFit.cover),
+                    child: Image.network(
+                      widget.libro['portada'] ?? '',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 20),
@@ -118,25 +141,88 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _editando 
-                        ? TextField(controller: _tituloController, decoration: const InputDecoration(labelText: 'Título'))
-                        : Text(_tituloController.text, style: GoogleFonts.playfairDisplay(fontSize: 22, fontWeight: FontWeight.bold)),
+                      _editando
+                          ? TextField(
+                              controller: _tituloController,
+                              decoration: const InputDecoration(
+                                labelText: 'Título',
+                              ),
+                            )
+                          : Text(
+                              _tituloController.text,
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                       const SizedBox(height: 8),
                       _editando
-                        ? TextField(controller: _autorController, decoration: const InputDecoration(labelText: 'Autor'))
-                        : Text(_autorController.text, style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[700])),
+                          ? TextField(
+                              controller: _autorController,
+                              decoration: const InputDecoration(
+                                labelText: 'Autor',
+                              ),
+                            )
+                          : Text(
+                              _autorController.text,
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                color: Colors.grey[700],
+                              ),
+                            ),
                       const SizedBox(height: 15),
-                      
+
                       // Indicadores rápidos (Placeholder)
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.orange, size: 18),
+                          // Rating
+                          const Icon(
+                            Icons.star,
+                            color: Colors.orange,
+                            size: 18,
+                          ),
                           const SizedBox(width: 5),
-                          Text("4.5", style: GoogleFonts.inter(fontWeight: FontWeight.bold)), // Dato de Google Books
+                          Text(
+                            widget.libro['rating'] ?? "0.0",
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ), // Páginas
                           const SizedBox(width: 15),
-                          const Icon(Icons.menu_book, color: Colors.grey, size: 18),
+                          const Icon(
+                            Icons.menu_book,
+                            color: Colors.grey,
+                            size: 18,
+                          ),
                           const SizedBox(width: 5),
-                          Text("320 pág.", style: GoogleFonts.inter(fontSize: 12)), // Dato de Google Books
+                          Text(
+                            "${widget.libro['paginas'] ?? '0'} pag.",
+                            style: GoogleFonts.inter(fontSize: 12),
+                          ),
+                          const SizedBox(width: 10),
+                          // Lanzamiento
+                          const Icon(
+                            Icons.date_range_rounded,
+                            color: Colors.grey,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 5),
+                          _editando
+                              ? SizedBox(
+                                  width: 60,
+                                  child: TextField(
+                                    controller: _yearController,
+                                    style: const TextStyle(fontSize: 12),
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                )
+                              : Text(
+                                  _yearController.text,
+                                  style: GoogleFonts.inter(fontSize: 12),
+                                ),
                         ],
                       ),
                     ],
@@ -158,13 +244,31 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                   Chip(
                     label: Text(_estadoSeleccionado),
                     backgroundColor: colorBadge,
-                    labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     side: BorderSide.none,
                   ),
                   // Ejemplo de Etiquetas automáticas de la API
-                  Chip(label: const Text("Fantasía"), backgroundColor: Colors.white70),
-                  Chip(label: const Text("Venganza"), backgroundColor: Colors.white70),
+                  ...(widget.libro['genero'] == null ||
+                              widget.libro['genero']!.isEmpty
+                          ? 'General'
+                          : widget.libro['genero']!)
+                      .split(', ')
+                      .map((nombreGenero) {
+                        return Chip(
+                          label: Text(nombreGenero),
+                          backgroundColor: Colors.white70,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          side: const BorderSide(color: Colors.black12),
+                        );
+                      }).toList(),
                 ],
               ),
             ),
@@ -192,19 +296,31 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.import_contacts, color: Color(0xFF2D241E)), // Icono de libro abierto
+                      const Icon(
+                        Icons.import_contacts,
+                        color: Color(0xFF2D241E),
+                      ), // Icono de libro abierto
                       const SizedBox(width: 10),
                       Text(
-                        "Sinopsis", 
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF2D241E))
+                        "Sinopsis",
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: const Color(0xFF2D241E),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 15),
                   Text(
-                    "Aquí volcaremos el texto largo que nos devuelva Google Books. Es una descripción detallada que ayuda a recordar de qué trataba el libro o a decidir si queremos leerlo.",
+                    widget.libro['sinopsis'] ??
+                        'No hay descripción disponible para este libro',
                     textAlign: TextAlign.justify,
-                    style: GoogleFonts.inter(height: 1.5, color: const Color(0xFF4A4A4A), fontSize: 14),
+                    style: GoogleFonts.inter(
+                      height: 1.5,
+                      color: const Color(0xFF4A4A4A),
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -220,8 +336,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                 color: Colors.white.withValues(alpha: _editando ? 1.0 : 0.5),
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
-                  color: _editando ? const Color(0xFFD4A373) : Colors.black12, 
-                  width: _editando ? 2 : 1
+                  color: _editando ? const Color(0xFFD4A373) : Colors.black12,
+                  width: _editando ? 2 : 1,
                 ),
               ),
               child: Column(
@@ -231,11 +347,17 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                     children: [
                       const Icon(Icons.edit_note, color: Color(0xFF2D241E)),
                       const SizedBox(width: 10),
-                      Text("Mis Notas", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        "Mis Notas",
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  
+
                   if (_editando)
                     Column(
                       children: [
@@ -256,7 +378,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                             onPressed: () {
                               // 1. Guardamos localmente el texto
                               widget.libro['notas'] = _notasController.text;
-                              
+
                               // 2. Quitamos el modo edición para congelar el texto
                               setState(() {
                                 _editando = false;
@@ -267,15 +389,31 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 
                               // 4. Feedback visual
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Nota guardada permanentemente")),
+                                const SnackBar(
+                                  content: Text(
+                                    "Nota guardada permanentemente",
+                                  ),
+                                ),
                               );
                             },
-                            icon: const Icon(Icons.check, size: 18, color: Colors.white),
-                            label: const Text("Confirmar nota", style: TextStyle(color: Colors.white)),
+                            icon: const Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              "Confirmar nota",
+                              style: TextStyle(color: Colors.white),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF2D241E),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
                             ),
                           ),
                         ),
@@ -283,13 +421,17 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                     )
                   else
                     Text(
-                      _notasController.text.isEmpty 
-                          ? "Toca el icono de editar arriba para escribir." 
+                      _notasController.text.isEmpty
+                          ? "Toca el icono de editar arriba para escribir."
                           : _notasController.text,
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        fontStyle: _notasController.text.isEmpty ? FontStyle.italic : FontStyle.normal,
-                        color: _notasController.text.isEmpty ? Colors.black38 : Colors.black87,
+                        fontStyle: _notasController.text.isEmpty
+                            ? FontStyle.italic
+                            : FontStyle.normal,
+                        color: _notasController.text.isEmpty
+                            ? Colors.black38
+                            : Colors.black87,
                       ),
                     ),
                 ],

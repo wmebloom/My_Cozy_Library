@@ -280,10 +280,13 @@ class _PantallaInicioState extends State<PantallaInicio> {
                   'titulo': resultado['titulo'] ?? 'Sin título',
                   'autor': resultado['autor'] ?? 'Anónimo',
                   'estado': resultado['estado'] ?? 'Pendiente',
-                  'portada':
-                      (resultado['url'] == null || resultado['url']!.isEmpty)
-                      ? 'https://via.placeholder.com/50x70'
-                      : resultado['url']!,
+                  'portada': resultado['portada'] ?? 'https://via.placeholder.com/50x70',
+                  'lanzamiento': resultado['lanzamiento'] ?? '----',
+                  'rating': resultado['rating'] ?? '0.0',
+                  'paginas': resultado['paginas'] ?? '0',
+                  'sinopsis': resultado['sinopsis'] ?? 'Sin sinopsis disponible',
+                  'genero': resultado['genero'] ?? 'General',
+                  
                 };
 
                 _todosLosLibros.add(nuevoLibro);
