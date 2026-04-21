@@ -274,7 +274,6 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             ),
 
             const SizedBox(height: 20),
-            const Divider(),
             const SizedBox(height: 20),
 
             // 3. TARJETA DE SINOPSIS
@@ -326,6 +325,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               ),
             ),
 
+            const SizedBox(height: 25),
+            const Divider(),
             const SizedBox(height: 25),
 
             // 4. TARJETA DE NOTAS PERSONALES
