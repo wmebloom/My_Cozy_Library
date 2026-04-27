@@ -5,16 +5,25 @@ import 'dart:convert'; // Convertir lista a JSON
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/book_details_screen.dart';
 import 'screens/login_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() => runApp(
-  MaterialApp(
-    initialRoute: '/',
-    routes: {
-      '/': (context) => const LoginScreen(),
-      '/home': (context) => const PantallaInicio(),
-    },
-  ),
-);
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LoginScreen(),
+        '/home': (context) => const PantallaInicio(),
+      },
+    ),
+  );
+}
 
 class PantallaInicio extends StatefulWidget {
   const PantallaInicio({super.key});
@@ -524,7 +533,10 @@ class _PantallaInicioState extends State<PantallaInicio> {
               builder: (context, scrollController) {
                 return SingleChildScrollView(
                   controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 25,
+                    vertical: 20,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,8 +574,12 @@ class _PantallaInicioState extends State<PantallaInicio> {
                         ],
                         seleccionActual: _filtroPaginasSeleccionado,
                         alCambiar: (valor) {
-                          setModalState(() => _filtroPaginasSeleccionado = valor); // Refresca el Modal
-                          setState(() => _filtroPaginasSeleccionado = valor);    // Refresca la Pantalla principal
+                          setModalState(
+                            () => _filtroPaginasSeleccionado = valor,
+                          ); // Refresca el Modal
+                          setState(
+                            () => _filtroPaginasSeleccionado = valor,
+                          ); // Refresca la Pantalla principal
                         },
                       ),
                       const SizedBox(height: 20),
@@ -571,10 +587,17 @@ class _PantallaInicioState extends State<PantallaInicio> {
                       // Filtro por Estado
                       _seccionFiltro(
                         titulo: "Estado",
-                        opciones: ["Todos", "En curso", "Finalizado", "Pendiente"],
+                        opciones: [
+                          "Todos",
+                          "En curso",
+                          "Finalizado",
+                          "Pendiente",
+                        ],
                         seleccionActual: _filtroEstadoSeleccionado,
                         alCambiar: (valor) {
-                          setModalState(() => _filtroEstadoSeleccionado = valor);
+                          setModalState(
+                            () => _filtroEstadoSeleccionado = valor,
+                          );
                           setState(() => _filtroEstadoSeleccionado = valor);
                         },
                       ),
