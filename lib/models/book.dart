@@ -12,14 +12,4 @@ class Book {
     required this.portada,
     required this.estado,
   });
-
-  factory Book.fromFirestore(String id, Map<String, dynamic> data) {
-    return Book(
-      id: id,
-      titulo: data['titulo'] ?? '',
-      autor: data['autor'] ?? '',
-      portada: data['portada'] ?? '',
-      estado: data['estado'] ?? 'pendiente',
-    );
-  }
 }
