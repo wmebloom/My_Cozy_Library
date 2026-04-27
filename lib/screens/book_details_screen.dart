@@ -86,7 +86,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF2D241E)),
 
-        // Flecha de atrás: Solo cierra la pantalla, no guarda nada
+        // Flecha de atrás
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -172,7 +172,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                             ),
                       const SizedBox(height: 15),
 
-                      // Indicadores rápidos (Placeholder)
+                      // Indicadores rápidos
                       Row(
                         children: [
                           // Rating
@@ -385,7 +385,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                                 _editando = false;
                               });
 
-                              // 3. ¡LLAMADA AL MAIN! Guardamos en el disco permanentemente
+                              // 3. Guardamos en el disco permanentemente
                               widget.onSave(widget.libro);
 
                               // 4. Feedback visual

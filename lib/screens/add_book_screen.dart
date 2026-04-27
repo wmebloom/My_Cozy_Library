@@ -23,7 +23,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
 
   String _selectedStatus = 'Pendiente';
 
-  // Esto es para que la imagen se actualice mientras escribes la URL
+  // Esto es para que la imagen se actualice mientras se escribe la URL
   String _tempUrl = '';
 
   @override
